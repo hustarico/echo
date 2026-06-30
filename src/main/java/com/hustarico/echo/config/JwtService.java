@@ -41,9 +41,22 @@ public class JwtService {
                 .compact();
     }
 
+    public boolean isTokenValid(String jwt, UserDetails userDetails){
+        final String username = extractUsername(jwt);
+        return username.equals(userDetails.getUsername()) && !isTokenExpired(jwt);
+    }
+
+    public boolean isTokenExpired (String jwt){
+        return extractExpiration(jwt).before(new Date(System.currentTimeMillis()));
+    }
 
 
 
+
+    //? helper methods??
+    public Date extractExpiration(String jwt){
+        return extractClaim(jwt,Claims::getExpiration);
+    }
     public String extractUsername(String jwt){
 
         return extractClaim(jwt,Claims::getSubject); 
