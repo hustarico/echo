@@ -30,7 +30,7 @@ public class AuthService {
         String jwt = jwtService.generateToken(user);
 
         return  AuthenticationResponse.builder()
-                .token(jwt)
+                .jwt(jwt)
                 .build();
     }
 
@@ -43,7 +43,7 @@ public class AuthService {
         String jwt = jwtService.generateToken(user);
 
         return AuthenticationResponse.builder()
-                .token(jwt)
+                .jwt(jwt)
                 .build();
     }
 }
