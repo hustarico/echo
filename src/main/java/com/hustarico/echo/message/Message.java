@@ -29,5 +29,5 @@ public class Message {
 
     private String text;
 
-    private LocalDateTime sendAt;
+    private LocalDateTime sentAt;
 }
