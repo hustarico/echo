@@ -10,14 +10,13 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
-@Data
 @RequiredArgsConstructor
 public class MessageService {
 
     private final MessageRepository messageRepository;
     private final UserRepository userRepository;
 
-    public void createMessage(MessageRequest messageRequest, int senderId){
+    public void createMessage(MessageRequest messageRequest, int senderId ){
 
         User sender = userRepository.findById(senderId).orElseThrow();
         User receiver = userRepository.findByUsername(messageRequest.sentTo()).orElseThrow();
@@ -34,9 +33,9 @@ public class MessageService {
     }
 
 
-    public List<Message> getMessages(int userId, int otherUserId){
-        User user = userRepository.findById(userId).orElseThrow();
-        User otherUser = userRepository.findById(otherUserId).orElseThrow();
+    public List<Message> getMessages(String username, String otherUserUsername){
+        User user = userRepository.findByUsername(username).orElseThrow();
+        User otherUser = userRepository.findByUsername(otherUserUsername).orElseThrow();
         return messageRepository.findBySenderAndReceiverOrSenderAndReceiverOrderBySentAtAsc(user,otherUser,otherUser,user);
     }
 
