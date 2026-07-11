@@ -17,10 +17,10 @@ public class MessageService {
     private final MessageRepository messageRepository;
     private final UserRepository userRepository;
 
-    public void createMessage(MessageRequest messageRequest, int senderId, int receiverId){
+    public void createMessage(MessageRequest messageRequest, int senderId){
 
         User sender = userRepository.findById(senderId).orElseThrow();
-        User receiver = userRepository.findById(receiverId).orElseThrow();
+        User receiver = userRepository.findByUsername(messageRequest.sentTo()).orElseThrow();
 
         Message message = Message.builder()
                 .text(messageRequest.text())

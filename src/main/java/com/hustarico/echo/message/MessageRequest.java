@@ -1,7 +1,7 @@
 package com.hustarico.echo.message;
 
 
-public record MessageRequest(String text) {
+public record MessageRequest(String text, String sentTo) {
 
 
 }
