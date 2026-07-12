@@ -33,10 +33,18 @@ public class MessageService {
     }
 
 
-    public List<Message> getMessages(String username, String otherUserUsername){
+    public List<MessageDTO> getMessages(String username, String otherUserUsername){
         User user = userRepository.findByUsername(username).orElseThrow();
         User otherUser = userRepository.findByUsername(otherUserUsername).orElseThrow();
-        return messageRepository.findBySenderAndReceiverOrSenderAndReceiverOrderBySentAtAsc(user,otherUser,otherUser,user);
+        List<Message> messages = messageRepository.findBySenderAndReceiverOrSenderAndReceiverOrderBySentAtAsc(user,otherUser,otherUser,user);
+        return messages.stream().map(message ->
+                new MessageDTO(
+                        message.getId(),
+                        message.getSender().getUsername(),
+                        message.getReceiver().getUsername(),
+                        message.getText(),
+                        message.getSentAt())
+        ).toList();
     }
 
 

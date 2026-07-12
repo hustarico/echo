@@ -26,7 +26,7 @@ public class MessageController {
     }
 
     @GetMapping("/history/{username}")
-    public ResponseEntity<List<Message>> getHistory(@PathVariable String username, @AuthenticationPrincipal User currentUser){
+    public ResponseEntity<List<MessageDTO>> getHistory(@PathVariable String username, @AuthenticationPrincipal User currentUser){
 
 
 
