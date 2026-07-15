@@ -16,7 +16,15 @@ public class MessageService {
     private final MessageRepository messageRepository;
     private final UserRepository userRepository;
 
-    public void createMessage(MessageRequest messageRequest, int senderId ){
+
+    public MessageDTO createMessage(MessageRequest messageRequest, String senderUsername){
+        User sender = userRepository.findByUsername(senderUsername).get();
+
+        return createMessage(messageRequest, sender.getId());
+    }
+
+
+    public MessageDTO createMessage(MessageRequest messageRequest, int senderId ){
 
         User sender = userRepository.findById(senderId).orElseThrow();
         User receiver = userRepository.findByUsername(messageRequest.sentTo()).orElseThrow();
@@ -30,6 +38,11 @@ public class MessageService {
 
 
         messageRepository.save(message);
+        return new MessageDTO(message.getId(),
+                message.getSender().getUsername(),
+                message.getReceiver().getUsername() ,
+                message.getText(),
+                message.getSentAt());
     }
 
 
