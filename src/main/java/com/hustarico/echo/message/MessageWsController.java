@@ -22,5 +22,6 @@ public class MessageWsController {
     public void sendMessage(MessageRequest messageRequest, Principal principal){
         MessageDTO messageDTO = messageService.createMessage(messageRequest, principal.getName());
         webSocketService.sendUserUpdate(messageRequest.sentTo(), messageDTO);
+        webSocketService.sendUserUpdate(principal.getName(), messageDTO);
     }
 }
