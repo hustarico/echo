@@ -11,4 +11,9 @@ public interface MessageRepository extends JpaRepository<Message,Integer> {
             User senderA, User receiverA,
             User senderB, User receiverB
             );
+
+    List<Message> findBySenderAndReceiverOrderBySentAtAsc(
+            User sender,
+            User receiver
+    );
 }
