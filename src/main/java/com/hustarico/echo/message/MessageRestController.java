@@ -2,6 +2,7 @@ package com.hustarico.echo.message;
 
 
 import com.hustarico.echo.user.User;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -19,7 +20,7 @@ public class MessageRestController {
 
 
     @PostMapping("")
-    public ResponseEntity<String> sendMessage(@RequestBody MessageRequest messageRequest, @AuthenticationPrincipal User currentUser) {
+    public ResponseEntity<String> sendMessage(@RequestBody @Valid MessageRequest messageRequest, @AuthenticationPrincipal User currentUser) {
 
         messageService.createMessage(messageRequest,currentUser.getId());
         return ResponseEntity.ok("message sent successfully!!");
