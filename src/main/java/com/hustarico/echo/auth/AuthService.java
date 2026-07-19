@@ -1,10 +1,7 @@
 package com.hustarico.echo.auth;
 
 import com.hustarico.echo.config.JwtService;
-import com.hustarico.echo.user.Role;
-import com.hustarico.echo.user.User;
-import com.hustarico.echo.user.UserRepository;
-import com.hustarico.echo.user.UsernameAlreadyExistsException;
+import com.hustarico.echo.user.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -22,11 +19,13 @@ public class AuthService {
 
     public AuthenticationResponse register(RegisterRequest request){
 
-        if(userRepository.existsByUsernameIgnoreCase(request.getUsername()))
-            throw new UsernameAlreadyExistsException("username "+request.getUsername()+ " is taken, choose another one");
+        String cleanUsername = request.getUsername().trim();
+
+        if(userRepository.existsByUsernameIgnoreCase(cleanUsername))
+            throw new UsernameAlreadyExistsException("username "+cleanUsername+ " is taken, choose another one");
 
         User user = User.builder()
-                .username(request.getUsername())
+                .username(cleanUsername)
                 .password(passwordEncoder.encode(request.getPassword()))
                 .role(Role.USER)
                 .build();
@@ -41,9 +40,11 @@ public class AuthService {
 
     public AuthenticationResponse authenticate(AuthenticationRequest request) {
 
-        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
+        String cleanUsername = request.getUsername().trim();
 
-        User user = userRepository.findByUsername(request.getUsername()).orElseThrow();
+        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(cleanUsername, request.getPassword()));
+
+        User user = userRepository.findByUsername(cleanUsername).orElseThrow(()->new UserNotFoundException("Account doesn't exist"));
 
         String jwt = jwtService.generateToken(user);
 

@@ -1,6 +1,7 @@
 package com.hustarico.echo.auth;
 
 import com.hustarico.echo.user.User;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,14 +19,14 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<AuthenticationResponse> register(
-            @RequestBody RegisterRequest registerRequest
+            @Valid @RequestBody RegisterRequest registerRequest
     ){
         return ResponseEntity.ok(authService.register(registerRequest));
     }
 
     @PostMapping("/login")
     public ResponseEntity<AuthenticationResponse> login(
-           @RequestBody AuthenticationRequest authenticationRequest
+           @Valid@RequestBody AuthenticationRequest authenticationRequest
     ){
 
         return ResponseEntity.ok(authService.authenticate(authenticationRequest));
