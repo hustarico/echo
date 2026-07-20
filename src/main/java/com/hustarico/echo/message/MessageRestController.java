@@ -33,4 +33,9 @@ public class MessageRestController {
 
         return ResponseEntity.ok(messageService.getMessages(currentUser.getUsername(),username ));
     }
+
+    @GetMapping("/recent")
+    public ResponseEntity<List<MessageDTO>> getRecent(@AuthenticationPrincipal User currentUser){
+        return ResponseEntity.ok(messageService.getRecentContacts(currentUser.getUsername()));
+    }
 }

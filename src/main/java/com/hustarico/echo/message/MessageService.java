@@ -73,5 +73,18 @@ public class MessageService {
     }
 
 
+    public List<MessageDTO> getRecentContacts(String currentUser){
+        return messageRepository.findRecentMessages(currentUser).stream().map(
+                message ->
+                    new MessageDTO(
+                            message.getId(),
+                            message.getSender().getUsername(),
+                            message.getReceiver().getUsername(),
+                            message.getText(),
+                            message.getSentAt())
+
+        ).toList();
+    }
+
 
 }
