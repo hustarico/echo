@@ -9,6 +9,7 @@ export default defineConfig({
       '/auth': 'http://localhost:8080',
       '/messages': 'http://localhost:8080',
       '/users': 'http://localhost:8080',
+      '/uploads': 'http://localhost:8080',
       '/ws': {
         target: 'http://localhost:8080',
         ws: true

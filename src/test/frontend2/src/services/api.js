@@ -49,13 +49,28 @@ export async function fetchRecentContacts(token) {
   });
 }
 
-export async function sendMessageRest(token, text, sentTo) {
+export async function uploadImage(token, file) {
+  const formData = new FormData();
+  formData.append('image', file);
+  const res = await fetch('/messages/upload', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${token}` },
+    body: formData
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || 'Upload failed');
+  }
+  return res.text();
+}
+
+export async function sendMessageRest(token, text, sentTo, imageUrl) {
   return authFetch('/messages', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`
     },
-    body: JSON.stringify({ text, sentTo })
+    body: JSON.stringify({ text, sentTo, ...(imageUrl ? { imageUrl } : {}) })
   });
 }

@@ -4,6 +4,7 @@ import {
   fetchMessageHistory,
   fetchRecentContacts,
   searchUsers,
+  uploadImage,
   sendMessageRest
 } from '../services/api';
 import { createStompClient, sendStompMessage } from '../services/websocket';
@@ -26,6 +27,11 @@ export default function Chat() {
   const [searchResults, setSearchResults] = useState([]);
   const [searching, setSearching] = useState(false);
   const searchTimeout = useRef(null);
+
+  const [uploading, setUploading] = useState(false);
+  const [pendingImage, setPendingImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const fileInputRef = useRef(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -151,16 +157,44 @@ export default function Chat() {
     return contact.senderUsername === username ? contact.receiverUsername : contact.senderUsername;
   };
 
+  const handleImageSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setPendingImage(file);
+    const reader = new FileReader();
+    reader.onload = (ev) => setImagePreview(ev.target.result);
+    reader.readAsDataURL(file);
+  };
+
+  const removePendingImage = () => {
+    setPendingImage(null);
+    setImagePreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
   const handleSend = async (e) => {
     e.preventDefault();
     const text = inputText.trim();
     const partner = getConversationPartner(activeContact);
-    if (!text || !partner) return;
+    if ((!text && !pendingImage) || !partner) return;
+
+    let imageUrl = null;
+    if (pendingImage) {
+      setUploading(true);
+      try {
+        imageUrl = await uploadImage(token, pendingImage);
+      } catch (err) {
+        setError('Image upload failed: ' + err.message);
+        setUploading(false);
+        return;
+      }
+    }
 
     if (wsConnected && clientRef.current?.connected) {
       try {
-        sendStompMessage(clientRef.current, text, partner);
+        sendStompMessage(clientRef.current, text, partner, imageUrl);
         setInputText('');
+        removePendingImage();
         return;
       } catch (err) {
         console.error('WS send failed, falling back to REST:', err);
@@ -168,12 +202,15 @@ export default function Chat() {
     }
 
     try {
-      await sendMessageRest(token, text, partner);
+      await sendMessageRest(token, text, partner, imageUrl);
       const history = await fetchMessageHistory(token, partner);
       setMessages(history || []);
       setInputText('');
+      removePendingImage();
     } catch (err) {
       setError('Failed to send: ' + err.message);
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -310,12 +347,21 @@ export default function Chat() {
                     >
                       <div style={{
                         ...styles.bubble,
-                        ...(isMine ? styles.bubbleMine : styles.bubbleTheirs)
+                        ...(isMine ? styles.bubbleMine : styles.bubbleTheirs),
+                        ...(msg.imageUrl ? styles.bubbleWithImage : {})
                       }}>
                         {!isMine && (
                           <div style={styles.bubbleSender}>{msg.senderUsername}</div>
                         )}
-                        <div>{msg.text}</div>
+                        {msg.text && <div>{msg.text}</div>}
+                        {msg.imageUrl && (
+                          <img
+                            src={msg.imageUrl}
+                            alt="message image"
+                            style={styles.bubbleImage}
+                            onClick={() => window.open(msg.imageUrl, '_blank')}
+                          />
+                        )}
                         <div style={styles.bubbleTime}>
                           {msg.sentAt ? new Date(msg.sentAt).toLocaleTimeString([], {
                             hour: '2-digit', minute: '2-digit'
@@ -328,7 +374,29 @@ export default function Chat() {
                 <div ref={messagesEndRef} />
               </div>
 
+              {imagePreview && (
+                <div style={styles.imagePreviewBar}>
+                  <img src={imagePreview} alt="preview" style={styles.previewThumb} />
+                  <span style={styles.previewName}>{pendingImage?.name}</span>
+                  <button type="button" onClick={removePendingImage} style={styles.removeImageBtn}>x</button>
+                </div>
+              )}
               <form onSubmit={handleSend} style={styles.inputBar}>
+                <input
+                  type="file"
+                  accept="image/*"
+                  ref={fileInputRef}
+                  onChange={handleImageSelect}
+                  style={{ display: 'none' }}
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  style={styles.imageBtn}
+                  title="Attach image"
+                >
+                  📷
+                </button>
                 <input
                   type="text"
                   placeholder={wsConnected ? 'Type a message...' : 'WebSocket disconnected, sending via REST...'}
@@ -338,10 +406,10 @@ export default function Chat() {
                 />
                 <button
                   type="submit"
-                  disabled={!inputText.trim() || historyLoading}
+                  disabled={(!inputText.trim() && !pendingImage) || historyLoading || uploading}
                   style={styles.sendBtn}
                 >
-                  Send
+                  {uploading ? 'Uploading...' : 'Send'}
                 </button>
               </form>
             </>
@@ -454,6 +522,12 @@ const styles = {
     maxWidth: '65%', padding: '10px 14px', borderRadius: '12px',
     fontSize: '14px', lineHeight: '1.4', wordBreak: 'break-word'
   },
+  bubbleWithImage: { padding: '8px' },
+  bubbleImage: {
+    maxWidth: '100%', maxHeight: '300px', borderRadius: '8px',
+    display: 'block', cursor: 'pointer', marginTop: '4px',
+    objectFit: 'contain', background: '#000'
+  },
   bubbleMine: {
     background: '#7c6df0', color: '#fff',
     borderBottomRightRadius: '4px'
@@ -476,5 +550,24 @@ const styles = {
     padding: '12px 24px', borderRadius: '8px', border: 'none',
     background: '#7c6df0', color: '#fff', fontSize: '14px',
     fontWeight: '600', cursor: 'pointer'
+  },
+  imageBtn: {
+    padding: '12px', borderRadius: '8px', border: '1px solid #333',
+    background: '#16213e', color: '#e0e0e0', fontSize: '16px',
+    cursor: 'pointer', lineHeight: '1'
+  },
+  imagePreviewBar: {
+    display: 'flex', alignItems: 'center', gap: '8px',
+    padding: '8px 20px', background: '#16213e',
+    borderTop: '1px solid #2a2a4a'
+  },
+  previewThumb: {
+    width: '36px', height: '36px', borderRadius: '6px',
+    objectFit: 'cover', border: '1px solid #444'
+  },
+  previewName: { fontSize: '12px', color: '#888', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
+  removeImageBtn: {
+    background: 'none', border: 'none', color: '#ff6b6b',
+    fontSize: '16px', cursor: 'pointer', padding: '0 4px'
   }
 };

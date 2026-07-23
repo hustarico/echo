@@ -7,7 +7,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.security.Principal;
 import java.util.List;
 
 @RestController
@@ -16,7 +19,7 @@ import java.util.List;
 public class MessageRestController {
 
     private final MessageService messageService;
-
+    private final FileStorageService fileStorageService;
 
 
     @PostMapping("")
@@ -37,5 +40,15 @@ public class MessageRestController {
     @GetMapping("/recent")
     public ResponseEntity<List<MessageDTO>> getRecent(@AuthenticationPrincipal User currentUser){
         return ResponseEntity.ok(messageService.getRecentContacts(currentUser.getUsername()));
+    }
+
+    @PostMapping(value = "/upload", consumes = {"multipart/form-data"})
+    public ResponseEntity<String> uploadImage(@RequestParam("image") MultipartFile imageFile) throws IOException {
+        if (imageFile == null || imageFile.isEmpty()) {
+            return ResponseEntity.badRequest().body("File is empty");
+        }
+
+        String imageUrl = fileStorageService.saveFile(imageFile);
+        return ResponseEntity.ok(imageUrl);
     }
 }

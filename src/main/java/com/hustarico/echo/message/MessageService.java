@@ -38,6 +38,7 @@ public class MessageService {
                 .sender(sender)
                 .receiver(receiver)
                 .sentAt(LocalDateTime.now())
+                .imageUrl(messageRequest.imageUrl())
                 .build();
 
 
@@ -46,6 +47,7 @@ public class MessageService {
                 message.getSender().getUsername(),
                 message.getReceiver().getUsername() ,
                 message.getText(),
+                message.getImageUrl(),
                 message.getSentAt());
     }
 
@@ -68,6 +70,7 @@ public class MessageService {
                         message.getSender().getUsername(),
                         message.getReceiver().getUsername(),
                         message.getText(),
+                        message.getImageUrl(),
                         message.getSentAt())
         ).toList();
     }
@@ -81,6 +84,7 @@ public class MessageService {
                             message.getSender().getUsername(),
                             message.getReceiver().getUsername(),
                             message.getText(),
+                            message.getImageUrl(),
                             message.getSentAt())
 
         ).toList();

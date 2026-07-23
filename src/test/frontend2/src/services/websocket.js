@@ -38,12 +38,12 @@ export function createStompClient(token, onMessage, onConnect, onDisconnect, onE
   return client;
 }
 
-export function sendStompMessage(client, text, sentTo) {
+export function sendStompMessage(client, text, sentTo, imageUrl) {
   if (!client || !client.connected) {
     throw new Error('Not connected to WebSocket');
   }
   client.publish({
     destination: '/app/chat.private',
-    body: JSON.stringify({ text, sentTo })
+    body: JSON.stringify({ text, sentTo, ...(imageUrl ? { imageUrl } : {}) })
   });
 }

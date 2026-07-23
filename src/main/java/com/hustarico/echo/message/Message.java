@@ -28,6 +28,8 @@ public class Message {
     private User receiver;
 
     private String text;
+    
+    private String imageUrl;
 
     private LocalDateTime sentAt;
 }
